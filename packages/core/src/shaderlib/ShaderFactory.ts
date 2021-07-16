@@ -2,15 +2,9 @@ import { ShaderLib } from "./ShaderLib";
 import { Logger } from "../base/Logger";
 
 class ShaderFactory {
-  static parseShaderName(name) {
-    return `#define O3_SHADER_NAME ${name}\n`;
-  }
-
   static parseCustomMacros(macros: string[]) {
     return (
-      "#define O3_CUSTOM_MACROS_START\n" +
-      macros.map((m) => `#define ${m}\n`).join("") +
-      "#define O3_CUSTOM_MACROS_END\n"
+      macros.map((m) => `#define ${m}\n`).join("")
     );
   }
 
@@ -37,9 +31,7 @@ class ShaderFactory {
    * */
   static parseExtension(extensions: string[]) {
     return (
-      `#define O3_EXTENSION_START\n` +
-      extensions.map((e) => `#extension ${e} : enable\n`).join("") +
-      `#define O3_EXTENSION_END\n`
+      extensions.map((e) => `#extension ${e} : enable\n`).join("")
     );
   }
 
@@ -54,8 +46,8 @@ class ShaderFactory {
     shader = shader.replace(/\bvarying\b/g, isFrag ? "in" : "out");
 
     /** replace api */
-    shader = shader.replace(/\btexture(2D|Cube)\s*\(/g, "texture(");
-    shader = shader.replace(/\btexture(2D|Cube)LodEXT\s*\(/g, "textureLod(");
+    shader = shader.replace(/\btexture(2D|Cube)\b/g, "texture");
+    shader = shader.replace(/\btexture(2D|Cube)LodEXT\b/g, "textureLod");
     if (isFrag) {
       const isMRT = /\bgl_FragData\[.+?\]/g.test(shader);
       if (isMRT) {

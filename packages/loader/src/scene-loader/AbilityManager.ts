@@ -1,11 +1,11 @@
 import { Component, Logger } from "@oasis-engine/core";
+import { Model } from "./Model";
 import { Oasis } from "./Oasis";
 import { Parser } from "./Parser";
 import { pluginHook } from "./plugins/PluginManager";
 import { scriptAbility } from "./resources";
 import { ComponentConfig, Props } from "./types";
 import { switchElementsIndex } from "./utils";
-
 export class AbilityManager {
   private abilityMap: { [id: string]: Component } = {};
 
@@ -32,6 +32,12 @@ export class AbilityManager {
     if (type === "GLTFModel") {
       // TODO
       (ability as any).init(abilityProps);
+    } else if (type === "Model") {
+      // TODO
+      (ability as any).setProps(abilityProps);
+      if (abilityProps.material) {
+        (ability as any).material = abilityProps.material;
+      }
     } else {
       for (let k in abilityProps) {
         if (abilityProps[k] !== null) {
@@ -51,22 +57,23 @@ export class AbilityManager {
 
   @pluginHook({ before: "beforeAbilityUpdated", after: "abilityUpdated" })
   public update(id: string, key: string, value: any) {
-    if (this.get(id).constructor.name === "Model") {
-      // TODO
-      if (value && this.checkIsAsset(value)) {
-        (this.get(id) as any).setProp(key, this.oasis.resourceManager.get(value.id).resource);
-      } else {
-        (this.get(id) as any).setProp(key, value);
-      }
+    if (value && this.checkIsAsset(value)) {
+      this.get(id)[key] = this.oasis.resourceManager.get(value.id).resource;
     } else {
-      if (value && this.checkIsAsset(value)) {
-        this.get(id)[key] = this.oasis.resourceManager.get(value.id).resource;
+      if (this.get(id).constructor === Model) {
+        (this.get(id) as any).updateProp(key, value);
       } else {
         this.get(id)[key] = value;
       }
     }
 
     return { id, key, value };
+  }
+
+  public addRuntimeComponent(componentId: string, component: Component) {
+    (component as any).id = componentId;
+    this.abilityMap[componentId] = component;
+    return component;
   }
 
   public get(id: string): Component {
@@ -90,7 +97,7 @@ export class AbilityManager {
 
     const constructor = Parser._components["o3"][type];
     if (!constructor) {
-      throw new Error(`${type} is not defined`);
+      console.warn(`${type} is not defined`);
     }
     return constructor;
   }

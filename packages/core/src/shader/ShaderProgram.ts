@@ -65,7 +65,6 @@ export class ShaderProgram {
 
   /**
    * Whether this shader program is valid.
-   * @readonly
    */
   get isValid(): boolean {
     return this._isValid;
@@ -263,7 +262,7 @@ export class ShaderProgram {
       return null;
     }
 
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    if (Logger.isEnabled && !gl.getProgramParameter(program, gl.LINK_STATUS)) {
       Logger.error("Could not link WebGL program. \n" + gl.getProgramInfoLog(program));
       gl.deleteProgram(program);
       return null;
@@ -292,7 +291,7 @@ export class ShaderProgram {
       return null;
     }
 
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    if (Logger.isEnabled && !gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
       Logger.error(
         `Could not compile WebGL shader.\n${gl.getShaderInfoLog(shader)}`,
         ShaderProgram._addLineNum(shaderSource)

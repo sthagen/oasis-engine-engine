@@ -1,3 +1,4 @@
+import { GLCapabilityType } from "../base/Constant";
 import { Engine } from "../Engine";
 import { ShaderFactory } from "../shaderlib/ShaderFactory";
 import { ShaderDataGroup } from "./enums/ShaderDataGroup";
@@ -156,9 +157,8 @@ export class Shader {
     const macroNameList = [];
     Shader._getNamesByMacros(macroCollection, macroNameList);
     const macroNameStr = ShaderFactory.parseCustomMacros(macroNameList);
-    const shaderNameStr = ShaderFactory.parseShaderName(this.name || "VOID");
     const versionStr = isWebGL2 ? "#version 300 es" : "#version 100";
-    const precisionStr = `
+    let precisionStr = `
     #ifdef GL_FRAGMENT_PRECISION_HIGH
       precision highp float;
       precision highp int;
@@ -172,9 +172,15 @@ export class Shader {
     #endif
     `;
 
+    if (engine._hardwareRenderer.canIUse(GLCapabilityType.shaderTextureLod)) {
+      precisionStr += "#define HAS_TEX_LOD\n";
+    }
+    if (engine._hardwareRenderer.canIUse(GLCapabilityType.standardDerivatives)) {
+      precisionStr += "#define HAS_DERIVATIVES\n";
+    }
+
     let vertexSource = ShaderFactory.parseIncludes(
       ` ${versionStr}
-        ${shaderNameStr}
         ${precisionStr}
         ${macroNameStr}
         ` + this._vertexSource
@@ -182,7 +188,6 @@ export class Shader {
 
     let fragmentSource = ShaderFactory.parseIncludes(
       ` ${versionStr}
-        ${shaderNameStr}
         ${isWebGL2 ? "" : ShaderFactory.parseExtension(Shader._shaderExtension)}
         ${precisionStr}
         ${macroNameStr}
