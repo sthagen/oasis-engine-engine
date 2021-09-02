@@ -23,8 +23,9 @@ Oasis is a **web-first** and **mobile-first** high-performance real-time develop
 const engine = new WebGLEngine("canvas-id");
 engine.canvas.resizeByClientSize();
 
-// Create root entity.
-const rootEntity = engine.sceneManager.activeScene.createRootEntity("Root");
+// Get scene and create root entity.
+const scene = engine.sceneManager.activeScene;
+const rootEntity = scene.createRootEntity("Root");
 
 // Create light.
 const lightEntity = rootEntity.createChild("Light");
@@ -91,9 +92,9 @@ npm run b:all
 ## Links
 
 - [Official Site](https://oasisengine.cn)
-- [Examples](https://oasisengine.cn/0.4/examples)
-- [Documentation](https://oasisengine.cn/0.4/docs/install-cn)
-- [API References](https://oasisengine.cn/0.4/api/core/index)
+- [Examples](https://oasisengine.cn/0.5/examples)
+- [Documentation](https://oasisengine.cn/0.5/docs/install-cn)
+- [API References](https://oasisengine.cn/0.5/api/core/index)
 
 
 ## License 
