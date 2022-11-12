@@ -1,9 +1,9 @@
 import { BoundingBox } from "@oasis-engine/math";
-import { Camera } from "../../Camera";
 import { assignmentClone, ignoreClone } from "../../clone/CloneManager";
 import { ICustomClone } from "../../clone/ComponentCloner";
 import { Entity } from "../../Entity";
 import { Renderer, RendererUpdateFlags } from "../../Renderer";
+import { RenderContext } from "../../RenderPipeline/RenderContext";
 import { SpriteMaskElement } from "../../RenderPipeline/SpriteMaskElement";
 import { Shader } from "../../shader/Shader";
 import { ShaderProperty } from "../../shader/ShaderProperty";
@@ -168,10 +168,29 @@ export class SpriteMask extends Renderer implements ICustomClone {
   }
 
   /**
+   * @internal
+   */
+  _cloneTo(target: SpriteMask): void {
+    target.sprite = this._sprite;
+  }
+
+  /**
+   * @override
+   */
+  protected _updateBounds(worldBounds: BoundingBox): void {
+    if (!this.sprite?.texture || !this.width || !this.height) {
+      worldBounds.min.set(0, 0, 0);
+      worldBounds.max.set(0, 0, 0);
+    } else {
+      SimpleSpriteAssembler.updatePositions(this);
+    }
+  }
+
+  /**
    * @override
    * @inheritdoc
    */
-  _render(camera: Camera): void {
+  protected _render(context: RenderContext): void {
     if (!this.sprite?.texture || !this.width || !this.height) {
       return;
     }
@@ -191,29 +210,11 @@ export class SpriteMask extends Renderer implements ICustomClone {
     const spriteMaskElementPool = this._engine._spriteMaskElementPool;
     const maskElement = spriteMaskElementPool.getFromPool();
     maskElement.setValue(this, this._renderData, this.getMaterial());
-    camera._renderPipeline._allSpriteMasks.add(this);
+    context.camera._renderPipeline._allSpriteMasks.add(this);
     this._maskElement = maskElement;
   }
 
-  /**
-   * @internal
-   */
-  _cloneTo(target: SpriteMask): void {
-    target.sprite = this._sprite;
-  }
-
-  /**
-   * @override
-   */
-  protected _updateBounds(worldBounds: BoundingBox): void {
-    if (!this.sprite?.texture || !this.width || !this.height) {
-      worldBounds.min.set(0, 0, 0);
-      worldBounds.max.set(0, 0, 0);
-    } else {
-      SimpleSpriteAssembler.updatePositions(this);
-    }
-  }
-
+  @ignoreClone
   private _onSpriteChange(type: SpriteModifyFlags): void {
     switch (type) {
       case SpriteModifyFlags.texture:

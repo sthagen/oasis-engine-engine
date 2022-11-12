@@ -1,5 +1,4 @@
-import { BoundingBox, Matrix } from "@oasis-engine/math";
-import { Camera } from "./Camera";
+import { BoundingBox, Matrix, Vector3 } from "@oasis-engine/math";
 import { assignmentClone, deepClone, ignoreClone, shallowClone } from "./clone/CloneManager";
 import { Component } from "./Component";
 import { dependentComponents } from "./ComponentsDependencies";
@@ -18,6 +17,8 @@ import { Transform, TransformModifyFlags } from "./Transform";
  */
 @dependentComponents(Transform)
 export class Renderer extends Component {
+  private static _tempVector0 = new Vector3();
+
   private static _receiveShadowMacro = Shader.getMacroByName("OASIS_RECEIVE_SHADOWS");
   private static _localMatrixProperty = Shader.getPropertyByName("u_localMat");
   private static _worldMatrixProperty = Shader.getPropertyByName("u_modelMat");
@@ -69,7 +70,7 @@ export class Renderer extends Component {
   @ignoreClone
   private _priority: number = 0;
   @assignmentClone
-  private _receiveShadows: boolean = false;
+  private _receiveShadows: boolean = true;
 
   /**
    * Whether receive shadow.
@@ -90,7 +91,7 @@ export class Renderer extends Component {
   }
 
   /** Whether cast shadow. */
-  castShadows: boolean = false;
+  castShadows: boolean = true;
 
   /**
    * Material count.
@@ -139,6 +140,8 @@ export class Renderer extends Component {
     this.shaderData._addRefCount(1);
     this._onTransformChanged = this._onTransformChanged.bind(this);
     this._registerEntityTransformListener();
+
+    this.shaderData.enableMacro(Renderer._receiveShadowMacro);
   }
 
   /**
@@ -263,14 +266,6 @@ export class Renderer extends Component {
   update(deltaTime: number): void {}
 
   /**
-   * @internal
-   */
-  _updateShaderData(context: RenderContext): void {
-    const worldMatrix = this.entity.transform.worldMatrix;
-    this._updateTransformShaderData(context, worldMatrix);
-  }
-
-  /**
    * @override
    * @internal
    */
@@ -297,8 +292,27 @@ export class Renderer extends Component {
   /**
    * @internal
    */
-  _render(camera: Camera): void {
-    throw "not implement";
+  _prepareRender(context: RenderContext): void {
+    const virtualCamera = context.virtualCamera;
+    const cameraPosition = virtualCamera.position;
+    const boundsCenter = this.bounds.getCenter(Renderer._tempVector0);
+
+    if (virtualCamera.isOrthographic) {
+      Vector3.subtract(boundsCenter, cameraPosition, boundsCenter);
+      this._distanceForSort = Vector3.dot(boundsCenter, virtualCamera.forward);
+    } else {
+      this._distanceForSort = Vector3.distanceSquared(boundsCenter, cameraPosition);
+    }
+
+    this._updateShaderData(context);
+    this._render(context);
+
+    // union camera global macro and renderer macro.
+    ShaderMacroCollection.unionCollection(
+      context.camera._globalShaderMacro,
+      this.shaderData._macroCollection,
+      this._globalShaderMacro
+    );
   }
 
   /**
@@ -315,16 +329,22 @@ export class Renderer extends Component {
     }
   }
 
+  protected _updateShaderData(context: RenderContext): void {
+    const worldMatrix = this.entity.transform.worldMatrix;
+    this._updateTransformShaderData(context, worldMatrix);
+  }
+
   protected _updateTransformShaderData(context: RenderContext, worldMatrix: Matrix): void {
     const shaderData = this.shaderData;
+    const virtualCamera = context.virtualCamera;
 
     const mvMatrix = this._mvMatrix;
     const mvpMatrix = this._mvpMatrix;
     const mvInvMatrix = this._mvInvMatrix;
     const normalMatrix = this._normalMatrix;
 
-    Matrix.multiply(context._camera.viewMatrix, worldMatrix, mvMatrix);
-    Matrix.multiply(context._viewProjectMatrix, worldMatrix, mvpMatrix);
+    Matrix.multiply(virtualCamera.viewMatrix, worldMatrix, mvMatrix);
+    Matrix.multiply(virtualCamera.viewProjectionMatrix, worldMatrix, mvpMatrix);
     Matrix.invert(mvMatrix, mvInvMatrix);
     Matrix.invert(worldMatrix, normalMatrix);
     normalMatrix.transpose();
@@ -342,6 +362,10 @@ export class Renderer extends Component {
   }
 
   protected _updateBounds(worldBounds: BoundingBox): void {}
+
+  protected _render(context: RenderContext): void {
+    throw "not implement";
+  }
 
   private _createInstanceMaterial(material: Material, index: number): Material {
     const insMaterial: Material = material.clone();
@@ -370,6 +394,7 @@ export class Renderer extends Component {
     }
   }
 
+  @ignoreClone
   protected _onTransformChanged(type: TransformModifyFlags): void {
     this._dirtyUpdateFlag |= RendererUpdateFlags.WorldVolume;
   }
