@@ -1,4 +1,4 @@
-import { Matrix, Vector3 } from "@oasis-engine/math";
+import { Matrix, Vector3 } from "@galacean/engine-math";
 import { Shader, ShaderData } from "../shader";
 import { ShaderProperty } from "../shader/ShaderProperty";
 import { Light } from "./Light";
@@ -53,6 +53,7 @@ export class PointLight extends Light {
    * @internal
    */
   _appendData(lightIndex: number): void {
+    const cullingMaskStart = lightIndex * 2;
     const colorStart = lightIndex * 3;
     const positionStart = lightIndex * 3;
     const distanceStart = lightIndex;
@@ -63,8 +64,8 @@ export class PointLight extends Light {
     const data = PointLight._combinedData;
 
     const cullingMask = this.cullingMask;
-    data.cullingMask[lightIndex] = cullingMask & 65535;
-    data.cullingMask[lightIndex + 1] = (cullingMask >>> 16) & 65535;
+    data.cullingMask[cullingMaskStart] = cullingMask & 65535;
+    data.cullingMask[cullingMaskStart + 1] = (cullingMask >>> 16) & 65535;
 
     data.color[colorStart] = lightColor.r;
     data.color[colorStart + 1] = lightColor.g;
