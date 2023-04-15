@@ -1,6 +1,6 @@
 {
   "name": "@galacean/engine-physics-lite",
-  "version": "0.9.0-beta.80",
+  "version": "1.0.0-beta.0",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org"
@@ -13,6 +13,12 @@
   "types": "types/index.d.ts",
   "scripts": {
     "b:types": "tsc"
+  },
+  "umd": {
+    "name": "Galacean.PhysicsLite",
+    "globals": {
+      "@galacean/engine": "Galacean"
+    }
   },
   "files": [
     "dist/**/*",
