@@ -12,8 +12,23 @@ export class PBRMaterial extends PBRBaseMaterial {
   private static _roughnessProp = ShaderProperty.getByName("material_Roughness");
   private static _roughnessMetallicTextureProp = ShaderProperty.getByName("material_RoughnessMetallicTexture");
 
+  private static _iorProp = Shader.getPropertyByName("material_IOR");
+
   /**
-   * Metallic, default 1.0.
+   * Index Of Refraction.
+   * @defaultValue `1.5`
+   */
+  get ior(): number {
+    return this.shaderData.getFloat(PBRMaterial._iorProp);
+  }
+
+  set ior(v: number) {
+    this.shaderData.setFloat(PBRMaterial._iorProp, Math.max(v, 0));
+  }
+
+  /**
+   * Metallic.
+   * @defaultValue `1.0`
    */
   get metallic(): number {
     return this.shaderData.getFloat(PBRMaterial._metallicProp);
@@ -24,7 +39,8 @@ export class PBRMaterial extends PBRBaseMaterial {
   }
 
   /**
-   * Roughness, default 1.0.
+   * Roughness. default 1.0.
+   * @defaultValue `1.0`
    */
   get roughness(): number {
     return this.shaderData.getFloat(PBRMaterial._roughnessProp);
@@ -45,9 +61,9 @@ export class PBRMaterial extends PBRBaseMaterial {
   set roughnessMetallicTexture(value: Texture2D) {
     this.shaderData.setTexture(PBRMaterial._roughnessMetallicTextureProp, value);
     if (value) {
-      this.shaderData.enableMacro("MATERIAL_ROUGHNESSMETALLICTEXTURE");
+      this.shaderData.enableMacro("MATERIAL_HAS_ROUGHNESS_METALLIC_TEXTURE");
     } else {
-      this.shaderData.disableMacro("MATERIAL_ROUGHNESSMETALLICTEXTURE");
+      this.shaderData.disableMacro("MATERIAL_HAS_ROUGHNESS_METALLIC_TEXTURE");
     }
   }
 
@@ -59,12 +75,13 @@ export class PBRMaterial extends PBRBaseMaterial {
     super(engine, Shader.find("pbr"));
     this.shaderData.setFloat(PBRMaterial._metallicProp, 1);
     this.shaderData.setFloat(PBRMaterial._roughnessProp, 1);
+    this.shaderData.setFloat(PBRMaterial._iorProp, 1.5);
   }
 
   /**
-   * @override
+   * @inheritdoc
    */
-  clone(): PBRMaterial {
+  override clone(): PBRMaterial {
     const dest = new PBRMaterial(this._engine);
     this.cloneTo(dest);
     return dest;

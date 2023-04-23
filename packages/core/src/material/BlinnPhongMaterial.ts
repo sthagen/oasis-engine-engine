@@ -164,8 +164,8 @@ export class BlinnPhongMaterial extends BaseMaterial {
 
     const shaderData = this.shaderData;
 
-    shaderData.enableMacro("MATERIAL_NEED_WORLDPOS");
-    shaderData.enableMacro("MATERIAL_NEED_TILINGOFFSET");
+    shaderData.enableMacro("MATERIAL_NEED_WORLD_POS");
+    shaderData.enableMacro("MATERIAL_NEED_TILING_OFFSET");
 
     shaderData.setColor(BlinnPhongMaterial._baseColorProp, new Color(1, 1, 1, 1));
     shaderData.setColor(BlinnPhongMaterial._specularColorProp, new Color(1, 1, 1, 1));
@@ -175,10 +175,7 @@ export class BlinnPhongMaterial extends BaseMaterial {
     shaderData.setFloat(BlinnPhongMaterial._normalIntensityProp, 1);
   }
 
-  /**
-   * @override
-   */
-  clone(): BlinnPhongMaterial {
+  override clone(): BlinnPhongMaterial {
     var dest: BlinnPhongMaterial = new BlinnPhongMaterial(this._engine);
     this.cloneTo(dest);
     return dest;
