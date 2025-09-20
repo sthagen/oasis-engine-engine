@@ -30,8 +30,8 @@ class SceneLoader extends Loader<Scene> {
       resourceManager
         // @ts-ignore
         ._request<IScene>(item.url, { ...item, type: "json" })
-        .then((data) => {
-          const scene = new Scene(engine);
+        .then((data: IScene) => {
+          const scene = new Scene(engine, data.name ?? "");
           const context = new ParserContext<IScene, Scene>(engine, ParserType.Scene, scene);
           const parser = new SceneParser(data, context, scene);
           parser._collectDependentAssets(data);
@@ -144,6 +144,20 @@ class SceneLoader extends Loader<Scene> {
               Logger.warn(
                 "Post Process is not supported in scene yet, please add PostProcess component in entity instead."
               );
+            }
+
+            // Ambient Occlusion
+            const ambientOcclusion = data.scene.ambientOcclusion;
+            if (ambientOcclusion) {
+              const sceneAmbientOcclusion = scene.ambientOcclusion;
+              sceneAmbientOcclusion.enabled = ambientOcclusion.enabledAmbientOcclusion;
+              sceneAmbientOcclusion.intensity = ambientOcclusion.intensity;
+              sceneAmbientOcclusion.radius = ambientOcclusion.radius;
+              sceneAmbientOcclusion.bias = ambientOcclusion.bias;
+              sceneAmbientOcclusion.power = ambientOcclusion.power;
+              sceneAmbientOcclusion.quality = ambientOcclusion.quality;
+              sceneAmbientOcclusion.bilateralThreshold = ambientOcclusion.bilateralThreshold;
+              sceneAmbientOcclusion.minHorizonAngle = ambientOcclusion.minHorizonAngle;
             }
 
             return Promise.all(promises).then(() => {

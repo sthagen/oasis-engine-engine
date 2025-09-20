@@ -16,6 +16,7 @@ export enum SpecularMode {
 }
 
 export interface IScene extends IHierarchyFile {
+  name?: string;
   scene: {
     background: {
       mode: BackgroundMode;
@@ -69,6 +70,16 @@ export interface IScene extends IHierarchyFile {
         enabled: boolean;
         mode: TonemappingMode;
       };
+    };
+    ambientOcclusion?: {
+      bias: number;
+      bilateralThreshold: number;
+      enabledAmbientOcclusion: boolean;
+      intensity: number;
+      power: number;
+      quality: number;
+      radius: number;
+      minHorizonAngle: number;
     };
   };
   files: Array<{ id: string; type: string; virtualPath: string; path: string }>;
